@@ -1,8 +1,11 @@
 import express from 'express';
+import dockerRouter from "./routes/docker";
 
 const app = express();
 
 const PORT = 3000;
+
+app.use("/docker", dockerRouter);
 
 app.get('/', (req, res) => {
     

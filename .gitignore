@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+#docker-compose-test
+docker-compose-test/*
+src/docker-compose-*
