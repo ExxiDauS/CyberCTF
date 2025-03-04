@@ -8,7 +8,7 @@ export function getGenerateDockerCompose(
   res: Response
 ) {
   generateDockerComposeFile(
-    { username: req.query.username, port: req.query.port },
+    { username: req.query.username, port: req.query.port, courseName: req.query.course },
     {
       outputPath: `./docker-compose/${req.query.course}/docker-compose-${req.query.username}-${req.query.course}`,
     }
@@ -21,7 +21,7 @@ export function getComposeUp(
   res: Response
 ) {
   composeUp({
-    composePath: `./docker-compose/${req.query.courseID}/docker-compose-${req.query.username}-${req.query.courseID}.yml`,
+    composePath: `./docker-compose/${req.query.courseID}/docker-compose-${req.query.username}-${req.query.courseID}/docker-compose-${req.query.username}-${req.query.courseID}.yml`,
   });
   res.send("Compose up");
 }

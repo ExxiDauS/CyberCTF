@@ -6,7 +6,7 @@ interface ComposeUpOptions {
 
 export function composeUp(composePath: ComposeUpOptions) {
   exec.exec(
-    `docker-compose -f ${composePath} up -d`,
+    `docker-compose -f ${composePath.composePath} up -d`,
     (error, stdout, stderr) => {
       if (error) {
         console.error(`exec error: ${error}`);

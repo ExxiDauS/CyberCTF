@@ -5,6 +5,7 @@ import * as ejs from "ejs";
 interface TemplateData {
   username: string;
   port: string;
+  courseName: string;
 }
 
 interface GeneratorOptions {
@@ -40,7 +41,7 @@ export function generateDockerComposeFile(
 
   const composeFilename: string = path.join(
     outputPath,
-    `docker-compose-${data.username}.yml`
+    `docker-compose-${data.username}-${data.courseName}.yml`
   );
 
   const dockerFilename: string = path.join(
