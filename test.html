@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberCTF Platform</title>
+    <style>
+        body { font-family: sans-serif; }
+        .error { color: red; }
+        .success { color: green; }
+        nav ul { list-style: none; padding: 0; }
+        nav ul li { display: inline; margin-right: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>CyberCTF Platform</h1>
+
+    <nav>
+        <ul>
+            <li><a href="#" onclick="showPage('home')">Home</a></li>
+            <li><a href="#" onclick="showPage('register')">Register</a></li>
+            <li><a href="#" onclick="showPage('login')">Login</a></li>
+            <li><a href="#" onclick="showPage('profile')">Profile</a></li>
+            <li><a href="#" onclick="showPage('addCourse')">Add Course</a></li>
+            <li><a href="#" onclick="showPage('editCourse')">Edit Course</a></li>
+            <li><a href="#" onclick="showPage('changeCourseRole')">Change Course Role</a></li>
+             <li><a href="#" onclick="showPage('changeGlobalRole')">Change Global Role</a></li>
+            <li><a href="#" onclick="logout()">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div id="content">
+        <!-- Content will be dynamically loaded here -->
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3001'; // Replace with your backend URL
+
+        // --- Helper Functions ---
+        function showPage(pageId) {
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = ''; // Clear previous content
+
+            switch (pageId) {
+                case 'home':
+                    loadCourses(); // Load courses on home page
+                    break;
+                case 'register':
+                    contentDiv.innerHTML = getRegisterForm();
+                    break;
+                case 'login':
+                    contentDiv.innerHTML = getLoginForm();
+                    break;
+                case 'profile':
+                    loadProfile();
+                    break;
+                case 'addCourse':
+                    contentDiv.innerHTML = getAddCourseForm();
+                    break;
+                 case 'editCourse':
+                    contentDiv.innerHTML = getEditCourseForm();
+                    break;
+                case 'changeCourseRole':
+                    contentDiv.innerHTML = getChangeCourseRoleForm();
+                    break;
+                case 'changeGlobalRole':
+                    contentDiv.innerHTML = getChangeGlobalRoleForm();
+                    break;
+                default:
+                    contentDiv.innerHTML = '<p>Page not found.</p>';
+            }
+        }
+
+        function getRegisterForm() {
+            return `
+                <h2>Register</h2>
+                <p class="error" id="register-error"></p>
+                <form id="register-form">
+                    <div><label>Username: <input type="text" name="username" required></label></div>
+                    <div><label>Password: <input type="password" name="password" required></label></div>
+                    <div><label>Email: <input type="email" name="email" required></label></div>
+                    <div><label>First Name: <input type="text" name="first_name" required></label></div>
+                    <div><label>Last Name: <input type="text" name="last_name" required></label></div>
+                    <button type="submit">Register</button>
+                </form>
+                <script>
+                    document.getElementById('register-form').onsubmit = async (e) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.target);
+                        const userData = Object.fromEntries(formData.entries());
+                        const errorEl = document.getElementById('register-error');
+                        errorEl.textContent = '';
+                         try {
+                            const response = await fetch('${API_URL}/register', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(userData)
+                            });
+                           if (!response.ok) {
+                                const errorData = await response.json();
+                                throw new Error(errorData.message || 'Registration failed');
+                            }
+                            alert('Registration successful!  Please log in.');
+                            showPage('login');  // Redirect to login
+                        } catch (error) {
+                            errorEl.textContent = error.message;
+                        }
+                    };
+                </${''}script>
+            `;
+        }
+
+        function getLoginForm() {
+            return `
+                <h2>Login</h2>
+                <p class="error" id="login-error"></p>
+                <form id="login-form">
+                    <div><label>Username: <input type="text" name="username" required></label></div>
+                    <div><label>Password: <input type="password" name="password" required></label></div>
+                    <button type="submit">Login</button>
+                </form>
+                <script>
+                    document.getElementById('login-form').onsubmit = async (e) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.target);
+                        const credentials = Object.fromEntries(formData.entries());
+                        const errorEl = document.getElementById('login-error');
+                        errorEl.textContent = '';
+
+                        try {
+                            const response = await fetch('${API_URL}/login', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(credentials)
+                            });
+                            if (!response.ok) {
+                                const errorData = await response.json();
+                                 throw new Error(errorData.message || 'Login failed');
+                            }
+                            // Store cookie (handled automatically by browser)
+
+                            showPage('home');  // Redirect to profile after successful login
+                        } catch (error) {
+                            errorEl.textContent = error.message;
+                        }
+
+                    };
+                </${''}script>
+            `;
+        }
+
+
+async function loadProfile() {
+    const contentDiv = document.getElementById('content');
+    try {
+        const response = await fetch(`${API_URL}/profile`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!response.ok) {
+           const errorData = await response.json();
+            if (response.status === 401 || response.status === 403) {  // More precise unauthorized handling.
+                showPage('login'); // Go to login page
+                throw new Error("Unauthorized: Please Log in")
+            }
+            throw new Error(errorData.message || 'Failed to load profile');
+
+        }
+
+        const profileData = await response.json();
+        contentDiv.innerHTML = `
+            <h2>Profile</h2>
+            <p>Username: ${profileData.user.username}</p>
+            <p>User ID: ${profileData.user.user_id}</p>
+            <p>Global Role ID: ${profileData.user.global_role_id}</p>
+        `;
+    } catch (error) {
+        contentDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+    }
+}
+
+        async function logout() {
+             try {
+                const response = await fetch('${API_URL}/logout', { method: 'POST' });
+                if (!response.ok) {
+                    throw new Error('Logout failed');
+                }
+                showPage('home'); // Redirect to home after logout.  Or login.
+            } catch (error) {
+                 alert(error.message); // Basic error display.
+            }
+        }
+
+       function getAddCourseForm() {
+        return `
+            <h2>Add Course</h2>
+            <p class="error" id="add-course-error"></p>
+            <p class="success" id="add-course-success"></p>
+            <form id="add-course-form">
+                <div><label>Course Name: <input type="text" name="courseName" required></label></div>
+                <div><label>Description: <input type="text" name="description" required></label></div>
+                <button type="submit">Add Course</button>
+            </form>
+            <script>
+                document.getElementById('add-course-form').onsubmit = async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    const courseData = Object.fromEntries(formData.entries());
+                    const errorEl = document.getElementById('add-course-error');
+                    const successEl = document.getElementById('add-course-success');
+                    errorEl.textContent = '';
+                    successEl.textContent = '';
+
+                    try {
+                        const response = await fetch('${API_URL}/courses', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(courseData)
+                        });
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.message || 'Failed to add course');
+                        }
+                        successEl.textContent = 'Course added successfully!';
+                        e.target.reset(); // Clear the form
+                    } catch (error) {
+                        errorEl.textContent = error.message;
+                    }
+                };
+            </${''}script>
+        `;
+      }
+
+function getEditCourseForm() {
+    return `
+        <h2>Edit Course</h2>
+        <p class="error" id="edit-course-error"></p>
+        <p class="success" id="edit-course-success"></p>
+        <form id="edit-course-form">
+            <div><label>Course ID: <input type="number" name="courseId" required></label></div>
+            <div><label>Course Name: <input type="text" name="courseName" required></label></div>
+            <div><label>Description: <input type="text" name="description" required></label></div>
+            <button type="submit">Edit Course</button>
+        </form>
+        <script>
+            document.getElementById('edit-course-form').onsubmit = async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const courseId = formData.get('courseId');
+                const courseData = {
+                    courseName: formData.get('courseName'),
+                    description: formData.get('description')
+                };
+
+                const errorEl = document.getElementById('edit-course-error');
+                const successEl = document.getElementById('edit-course-success');
+                errorEl.textContent = '';
+                successEl.textContent = '';
+
+                try {
+                    const response = await fetch(\`\${API_URL}/courses/\${courseId}\`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(courseData)
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to edit course');
+                    }
+                    successEl.textContent = 'Course updated successfully!';
+                } catch (error) {
+                    errorEl.textContent = error.message;
+                }
+            };
+        </${''}script>
+    `;
+}
+
+function getChangeCourseRoleForm() {
+    return `
+        <h2>Change Course Role</h2>
+        <p class="error" id="change-course-role-error"></p>
+        <p class="success" id="change-course-role-success"></p>
+        <form id="change-course-role-form">
+            <div><label>Course ID: <input type="number" name="courseId" required></label></div>
+            <div><label>User ID: <input type="number" name="userId" required></label></div>
+            <div><label>Course Role ID: <input type="number" name="courseRoleId" required></label></div>
+            <button type="submit">Change Role</button>
+        </form>
+        <script>
+        document.getElementById('change-course-role-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const courseId = formData.get('courseId');
+            const userId = formData.get('userId');
+            const courseRoleId = formData.get('courseRoleId');
+            const errorEl = document.getElementById('change-course-role-error');
+            const successEl = document.getElementById('change-course-role-success');
+            errorEl.textContent = '';
+            successEl.textContent = '';
+
+            try {
+                const response = await fetch(\`\${API_URL}/courses/\${courseId}/users/\${userId}/role\`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ courseRoleId })  // Send as an object
+                });
+
+                if (!response.ok) {
+                     const errorData = await response.json();
+                     throw new Error(errorData.message || 'Failed to change role');
+                }
+
+                successEl.textContent = 'Course role updated successfully!';
+                e.target.reset();
+            } catch (error) {
+                errorEl.textContent = error.message;
+            }
+        };
+
+        </${''}script>
+    `;
+}
+function getChangeGlobalRoleForm() {
+    return `
+      <h2>Change Global Role</h2>
+        <p class="error" id="change-global-role-error"></p>
+        <p class="success" id="change-global-role-success"></p>
+      <form id="change-global-role-form">
+        <div><label for="userId">User Id:</label> <input type="number" id="userId" name="userId"></div>
+        <div><label for="globalRoleId">Global Role ID:</label> <input type="number" id="globalRoleId" name="globalRoleId"></div>
+        <button type="submit">Change Role</button>
+      </form>
+      <script>
+        document.getElementById("change-global-role-form").onsubmit = async (e) => {
+          e.preventDefault();
+            const formData = new FormData(e.target);
+            const userId = formData.get('userId');
+            const globalRoleId = formData.get('globalRoleId');
+            const errorEl = document.getElementById('change-global-role-error');
+            const successEl = document.getElementById('change-global-role-success');
+            errorEl.textContent = '';
+            successEl.textContent = '';
+
+            try {
+                const response = await fetch(\`\${API_URL}/users/\${userId}/globalRole\`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ globalRoleId })  // Send as an object
+                });
+              if(!response.ok){
+                const errorData = await response.json();
+                throw new Error(errorData.message||"Failed to change global role");
+              }
+              successEl.textContent = 'Global role Updated';
+
+            }catch(error){
+                errorEl.textContent = error.message;
+            }
+        }
+      </${''}script>
+    `
+}
+
+
+async function loadCourses() {
+    const contentDiv = document.getElementById('content');
+    try {
+        // 1. Get the logged-in user's ID (you need a way to get this!)
+        const profileResponse = await fetch(`${API_URL}/profile`, { method: 'GET' });
+
+        if (!profileResponse.ok) {
+            const errorData = await profileResponse.json();
+            if (profileResponse.status === 401 || profileResponse.status === 403) {
+                showPage('login');  // Redirect to login if not authenticated
+                return;
+            }
+            throw new Error(errorData.message || 'Failed to fetch profile');
+        }
+        const profileData = await profileResponse.json();
+        const userId = profileData.user.user_id;
+
+
+        // 2. Get enrollments for that user.  This assumes you have a new backend endpoint.
+        const enrollmentsResponse = await fetch(`${API_URL}/users/${userId}/courses`, { method: 'GET' });
+
+        if (!enrollmentsResponse.ok) {
+           const errorData = await enrollmentsResponse.json();
+            throw new Error(errorData.message || 'Failed to fetch enrollments');
+        }
+        const enrollments = await enrollmentsResponse.json();
+
+
+        // 3. Build HTML to display the courses.
+        let coursesHTML = '<h2>Your Courses</h2>';
+        if (enrollments.length === 0) {
+            coursesHTML += '<p>You are not enrolled in any courses.</p>';
+        } else {
+            coursesHTML += '<table>';
+            coursesHTML += '<thead><tr><th>Course ID</th><th>Course Name</th><th>Description</th></tr></thead>';
+            coursesHTML += '<tbody>';
+            for (const enrollment of enrollments) {
+                coursesHTML += `<tr><td>${enrollment.course_id}</td><td>${enrollment.course_name}</td><td>${enrollment.description}</td></tr>`;
+            }
+            coursesHTML += '</tbody></table>';
+        }
+
+        contentDiv.innerHTML = coursesHTML;
+
+    } catch (error) {
+        contentDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+    }
+}
+        // Initial page load
+        showPage('home');
+    </script>
+</body>
+</html>
