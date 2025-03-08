@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as courseModel from '../models/courseModel';
+import * as roleModel from '../models/roleModel'; // Import roleModel
 
 // Create a new course (Admin only)
 export const createCourse = async (req: Request, res: Response) => {
@@ -13,6 +14,10 @@ export const createCourse = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.userId;
     const courseId = await courseModel.createCourse(course_name, course_description, userId);
+
+    // Automatically enroll and assign Lecturer role (course_role_id = 1):
+    await roleModel.assignCourseRole(userId, courseId, 1);
+
     res.status(201).json({ message: 'Course created successfully', courseId });
     return;
   } catch (error) {
