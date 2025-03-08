@@ -1,4 +1,4 @@
-// db.ts (Database Connection - BEST PRACTICE)
+// db.ts
 import mysql from 'mysql2/promise';
 import process from 'process';
 import dotenv from 'dotenv';
