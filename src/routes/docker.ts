@@ -1,10 +1,13 @@
 import { Router } from "express";
-import { getGenerateDockerCompose, getComposeUp } from "../handlers/docker";
+import { postComposeUp, postCreateContainer } from "../handlers/docker";
+import { postBuildImage } from "../handlers/docker";
 
 const router = Router();
 
-router.get("/generate-compose", getGenerateDockerCompose);
+router.post("/create-compose", postCreateContainer);
+router.post("/build-image", postBuildImage);
+router.post("/compose-up", postComposeUp);
 
-router.get("/compose-up", getComposeUp);
+// router.get("/compose-up", getComposeUp);
 
 export default router;

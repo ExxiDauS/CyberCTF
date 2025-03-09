@@ -13,10 +13,16 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.758.0",
+    "@types/dockerode": "^3.3.35",
+    "dockerode": "^4.0.4",
+    "dotenv": "^16.4.7",
     "ejs": "^3.1.10",
     "express": "^4.21.2"
   },
   "devDependencies": {
+    "@types/aws-sdk": "^0.0.42",
+    "@types/dotenv": "^6.1.1",
     "@types/ejs": "^3.1.5",
     "@types/express": "^5.0.0",
     "nodemon": "^3.1.9",

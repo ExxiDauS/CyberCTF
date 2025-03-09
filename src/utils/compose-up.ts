@@ -1,19 +1,18 @@
-import exec from "child_process";
+import Docker from 'dockerode';
 
-interface ComposeUpOptions {
-    composePath: string;
-}
+const docker = new Docker();
 
-export function composeUp(composePath: ComposeUpOptions) {
-  exec.exec(
-    `docker-compose -f ${composePath.composePath} up -d`,
-    (error, stdout, stderr) => {
-      if (error) {
-        console.error(`exec error: ${error}`);
-        return;
+export async function composeUp(courseName: string, problemID: number) {
+  try {
+    const allContainer = await docker.listContainers({all: true})
+    for (let i = 0; i < allContainer.length; i++) {
+      if (allContainer[i].Names[0].includes(`${courseName}-${problemID}`)) {
+        const container = docker.getContainer(allContainer[i].Id);
+        container.start();
       }
-      console.log(`stdout: ${stdout}`);
-      console.error(`stderr: ${stderr}`);
     }
-  );
-}
+  } catch (error) {
+    console.log(error)
+    throw error
+  }
+};

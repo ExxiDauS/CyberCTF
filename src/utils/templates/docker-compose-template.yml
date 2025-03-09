@@ -1,14 +1,14 @@
 version: "3"
 services:
-  <%= username %>_service:
+  service:
     build:
       context: .
-      dockerfile: Dockerfile-<%= username %>
-    container_name: ubuntu-<%= username %>
+      dockerfile: dockerfile
+    container_name: ubuntu
     restart: unless-stopped
     ports:
-      - "<%= port %>:22"
+      - "2222:22"
     volumes:
-      - ./data/<%= username %>:/app/data
+      - ./data:/app/data
     environment:
       - USERNAME=<%= username %>

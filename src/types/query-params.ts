@@ -1,5 +1,6 @@
 export interface GenerateDockerComposeParams {
   username: string;
   port: string;
-  course: string;
+  courseName: string;
+  problemID: number;
 }

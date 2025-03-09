@@ -1,67 +1,46 @@
-import * as fs from "fs";
-import * as path from "path";
-import * as ejs from "ejs";
+import Docker from "dockerode";
 
 interface TemplateData {
   username: string;
   port: string;
   courseName: string;
+  problemID: number;
 }
 
-interface GeneratorOptions {
-  outputPath?: string;
-}
+const docker = new Docker();
 
-export function generateDockerComposeFile(
-  data: TemplateData,
-  options: GeneratorOptions = {}
-): string {
-  // Get template
-  const templatePath: string = path.join(
-    __dirname,
-    "templates",
-    "docker-compose-template.yml"
-  );
-  const templateStr: string = fs.readFileSync(templatePath, "utf8");
+export async function createContainer(data: TemplateData) {
+  try {
+    const imageName = `${data.courseName}-${data.problemID}:1.0.0`;
 
-  const dockerTemplatePath: string = path.join(
-    __dirname,
-    "templates",
-    "Dockerfile"
-  );
-  const dockerTemplateStr: string = fs.readFileSync(dockerTemplatePath, "utf8");
+    console.log(`Attempting to use image: ${imageName}`);
+    // Create container with options matching Docker Compose configuration
+    const container = await docker.createContainer({
+      Image: imageName,
+      Cmd: ["sh"],
+      AttachStdout: true,
+      HostConfig: {
+        // Port binding (convert from Docker Compose format to Dockerode format)
+        PortBindings: {
+          "22/tcp": [{ HostPort: "2222" }],
+          "80/tcp": [{ HostPort: data.port }],
+        },
+        // Volume mapping
+        Binds: ["./data:/app/data"],
+        // Restart policy
+        RestartPolicy: {
+          Name: "always",
+        },
+      },
+      // Container name (optional)
+      name: `${data.courseName}-${data.problemID}-${data.username}`,
+      // Environment variables
+      Env: [`USERNAME=${data.username}`],
+    });
 
-  // Render template with data
-  const renderedCompose: string = ejs.render(templateStr, data);
-
-  const renderedDocker: string = ejs.render(dockerTemplateStr, data);
-
-  // Determine output path
-  const outputPath = options.outputPath || __dirname;
-
-  const composeFilename: string = path.join(
-    outputPath,
-    `docker-compose-${data.username}-${data.courseName}.yml`
-  );
-
-  const dockerFilename: string = path.join(
-    outputPath,
-    `Dockerfile-${data.username}`
-  );
-
-  // Ensure output directory exists
-  const outputDir = path.dirname(composeFilename);
-  const dockerOutputDir = path.dirname(dockerFilename);
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
-    fs.mkdirSync(dockerOutputDir, { recursive: true });
+    return container;
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to create container");
   }
-
-  // Write file
-  fs.writeFileSync(composeFilename, renderedCompose);
-  fs.writeFileSync(dockerFilename, renderedDocker);
-  console.log(`Generated compose file: ${composeFilename}`);
-  console.log(`Generated Dockerfile: ${dockerFilename}`);
-
-  return composeFilename;
 }
