@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { postComposeUp, postCreateContainer, postUploadImage } from "../handlers/docker";
-import { postBuildImage } from "../handlers/docker";
+import { postComposeUp, postCreateContainer, postUploadImage } from "../controllers/docker";
+import { postBuildImage } from "../controllers/docker";
 import multer from "multer";
 
 const storage = multer.memoryStorage();

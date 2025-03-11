@@ -23,11 +23,10 @@ app.use('/api/auth', authRouter); // Use the auth routes
 app.use('/api/courses', courseRouter);
 app.use('/api/roles', rolesRouter);
 app.use('/api/problems', problemRouter); 
-
-app.use("/docker", dockerRouter);
+app.use("/api/docker", dockerRouter);
 
 app.get('/', (req, res) => {
-  res.send('Welcome to the API!');res.send('Hello World!');
+  res.send('Welcome to the API!');
 });
 
 app.listen(PORT, () => {
