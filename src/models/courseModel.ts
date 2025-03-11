@@ -97,3 +97,19 @@ export const unenrollUserFromCourse = async (userId: number, courseId: number): 
         connection.release();
     }
 };
+
+export const getCourseById = async (courseId: number): Promise<Course | null> => {
+  const connection = await pool.getConnection();
+  try {
+      const [rows] = await connection.query<RowDataPacket[]>(
+          'SELECT * FROM Courses WHERE course_id = ?',
+          [courseId]
+      );
+      if (rows.length === 0) {
+          return null; // Course not found
+      }
+      return rows[0] as Course;
+  } finally {
+      connection.release();
+  }
+};

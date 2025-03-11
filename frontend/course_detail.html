@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Course Detail</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1 id="course-title">Course Detail</h1>
+    <p><strong>Description:</strong> <span id="course-description"></span></p>
+     <!-- Add section to add problem -->
+    <h2>Add Problem to Course</h2>
+        <select id="problem-select">
+            <!-- Options will be populated dynamically -->
+        </select>
+    <input type="datetime-local" id="expiration-date" placeholder="Expiration Date (Optional)">
+    <button onclick="addProblemToCourse()">Add Problem</button>
+    <p id="add-problem-message"></p>
+    <h2>Problems</h2>
+    <ul id="problem-list">
+        <!-- Problems will be listed here -->
+    </ul>
+
+    <button onclick="goToCourses()">Back to Courses</button>
+
+    <script src="script.js"></script>
+</body>
+</html>

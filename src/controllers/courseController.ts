@@ -111,3 +111,24 @@ export const unenrollFromCourse = async (req: Request, res: Response) => {
       res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
+export const getCourseById = async (req: Request, res: Response) => {
+  const courseId = parseInt(req.params.courseId, 10);
+
+  if (isNaN(courseId)) {
+      res.status(400).json({ message: 'Invalid course ID' });
+      return;
+  }
+
+  try {
+      const course = await courseModel.getCourseById(courseId);
+      if (!course) {
+          res.status(404).json({ message: 'Course not found' });
+          return;
+      }
+      res.json(course);
+  } catch (error) {
+      console.error('Error in getCourseById controller:', error);
+      res.status(500).json({ message: 'Internal Server Error' });
+  }
+};

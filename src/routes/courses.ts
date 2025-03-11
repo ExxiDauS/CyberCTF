@@ -10,10 +10,7 @@ router.post('/', authenticate, hasGlobalPermission('create_course'), courseContr
 // Update a course (Teacher or Admin)
 router.put('/:courseId', authenticate, hasCoursePermission('courseId', 'edit_course'), courseController.updateCourse);
 
-//get all courses (for admin only)
-router.get('/', authenticate, hasGlobalPermission('access_all_courses'), courseController.getAllCourses);
-
-// Get all courses (for all users)
+// Get all courses (for everyone)
 router.get('/all', authenticate, courseController.getAllCourses);
 
 // Get enrolled courses for the current user
@@ -24,5 +21,8 @@ router.post('/:courseId/enroll', authenticate, courseController.enrollInCourse);
 
 // Unenroll from a course.
 router.delete('/:courseId/unenroll', authenticate, courseController.unenrollFromCourse);
+
+// NEW: Get course details by courseId
+router.get('/:courseId', authenticate, courseController.getCourseById);
 
 export default router;
