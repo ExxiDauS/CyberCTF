@@ -1,0 +1,14 @@
+version: "3"
+services:
+  service:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: ubuntu
+    restart: unless-stopped
+    ports:
+      - "2222:22"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - USERNAME=<%= username %>
