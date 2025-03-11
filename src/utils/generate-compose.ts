@@ -25,7 +25,7 @@ export async function createContainer(data: TemplateData) {
         PortBindings: {
           '22/tcp': [
             {
-              HostPort: '2222'    // Map container port 22 to host port 2222
+              HostPort: data.port    // Map container port 22 to host port 2222
             }
           ]
         },
