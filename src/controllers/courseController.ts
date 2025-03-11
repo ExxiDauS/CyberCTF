@@ -7,13 +7,24 @@ export const createCourse = async (req: Request, res: Response) => {
   const { course_name, course_description } = req.body;
 
   if (!course_name || !course_description) {
-      res.status(400).json({ message: 'Course name and description are required' });
-      return;
+    res.status(400).json({ message: 'Course name and description are required' });
+    return;
   }
 
+  const cleanedCourseName = course_name.toLowerCase().replace(/\s+/g, ''); 
+  if (cleanedCourseName !== course_name) {
+    res.status(400).json({ message: 'Course name must be lowercase and contain no whitespace' });
+    return;
+  }
+    if (cleanedCourseName.length === 0)
+    {
+        res.status(400).json({ message: 'Course name cannot be empty after removing spaces' });
+        return;
+    }
+
   try {
-    const userId = (req as any).user.userId;
-    const courseId = await courseModel.createCourse(course_name, course_description, userId);
+    const userId = (req as any).user.userId;  // Consider using a type assertion with a custom interface
+    const courseId = await courseModel.createCourse(cleanedCourseName, course_description, userId);
 
     // Automatically enroll and assign Lecturer role (course_role_id = 1):
     await roleModel.assignCourseRole(userId, courseId, 1);
