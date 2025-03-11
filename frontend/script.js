@@ -459,6 +459,42 @@ async function unenrollFromCourse(courseId) {
     }
 }
 
+async function loadSubmissions(courseId) {
+    try {
+        const response = await fetch(`http://localhost:3000/api/problems/course/${courseId}/submissions`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${getToken()}`,
+            },
+        });
+
+        if (response.ok) {
+            const submissions = await response.json();
+            displaySubmissions(submissions);
+        } else {
+            console.error('Failed to load submissions:', response.status);
+        }
+    } catch (error) {
+        console.error('Error loading submissions:', error);
+    }
+}
+
+function displaySubmissions(submissions) {
+    const submissionsList = document.getElementById('submissions-list');
+     if(!submissionsList){ //if element not exist
+        return;
+    }
+    submissionsList.innerHTML = ''; // Clear previous content
+
+
+    submissions.forEach(submission => {
+        const submissionItem = document.createElement('li');
+        // Assuming you have a 'username' property associated with the submission
+        submissionItem.textContent = `User: ${submission.username}, Submission Date: ${new Date(submission.submission_date).toLocaleString()}, Status: ${submission.status ? 'Good' : 'Bad'}`;
+        submissionsList.appendChild(submissionItem);
+    });
+}
+// Modify loadCourseDetail to call loadSubmissions
 async function loadCourseDetail() {
     const urlParams = new URLSearchParams(window.location.search);
     const courseId = urlParams.get('courseId');
@@ -530,6 +566,8 @@ async function loadCourseDetail() {
         displayProblems(problems);
 
         await populateProblemSelect();
+        // Load submissions
+        await loadSubmissions(courseId); // Add this line
 
     } catch (error) {
         console.error('Error loading course detail page:', error);
@@ -566,13 +604,18 @@ async function displayProblems(problems) {
               listItem.style.color = submission.status ? 'green' : 'red';
             } else {
                 // Add submission buttons only if no submission exists
+                const answerTextArea = document.createElement('textarea');
+                answerTextArea.id = `answer-${problem.pro_cour_id}`;
+                answerTextArea.placeholder = 'Enter your answer here...';
+                listItem.appendChild(answerTextArea);
+
                 const goodSubmitButton = document.createElement('button');
                 goodSubmitButton.textContent = 'Good Submit';
-                goodSubmitButton.onclick = () => createSubmission(problem.pro_cour_id, true);
+                goodSubmitButton.onclick = () => createSubmission(problem.pro_cour_id, true, answerTextArea.value);
 
                 const badSubmitButton = document.createElement('button');
                 badSubmitButton.textContent = 'Bad Submit';
-                badSubmitButton.onclick = () => createSubmission(problem.pro_cour_id, false);
+                badSubmitButton.onclick = () => createSubmission(problem.pro_cour_id, false, answerTextArea.value);
 
                 listItem.appendChild(goodSubmitButton);
                 listItem.appendChild(badSubmitButton);
@@ -585,7 +628,7 @@ async function displayProblems(problems) {
     }
 }
 
-async function createSubmission(pro_cour_id, status) {
+async function createSubmission(pro_cour_id, status, answer) {
     try {
         const response = await fetch('http://localhost:3000/api/problems/submissions', {
             method: 'POST',
@@ -593,7 +636,7 @@ async function createSubmission(pro_cour_id, status) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${getToken()}`,
             },
-            body: JSON.stringify({ pro_cour_id, status }),
+            body: JSON.stringify({ pro_cour_id, status, answer }),
         });
 
         if (response.ok) {

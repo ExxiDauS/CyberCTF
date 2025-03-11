@@ -48,7 +48,7 @@ export const addProblemToCourse = async (req: Request, res: Response) => {
 
 // Create a submission (Student enrolled in the course)
 export const createSubmission = async (req: Request, res: Response) => {
-    const { pro_cour_id, status } = req.body;
+    const { pro_cour_id, status, answer } = req.body;
     const userId = (req as any).user.userId;
 
     if (!pro_cour_id || status === undefined) {
@@ -56,7 +56,7 @@ export const createSubmission = async (req: Request, res: Response) => {
         return; // <--- Add return here
     }
     try {
-        const sub_id = await problemModel.createSubmission(pro_cour_id, userId, status);
+        const sub_id = await problemModel.createSubmission(pro_cour_id, userId, status, answer);
         res.status(201).json({ message: 'Submission created successfully', sub_id });
         return; // <--- Add return here (optional but good practice)
     } catch (error) {
@@ -114,5 +114,25 @@ export const getSubmissionStatus = async (req: Request, res: Response) => {
         console.error('Error in getSubmissionStatus controller:', error);
         res.status(500).json({ message: 'Internal Server Error' });
         return; // <--- Add return here
+    }
+};
+
+//get submissions by course ID
+export const getSubmissionsByCourse = async (req: Request, res: Response) => {
+    const courseId = parseInt(req.params.courseId, 10);
+
+    if (isNaN(courseId)) {
+        res.status(400).json({ message: 'Invalid course ID' });
+        return;
+    }
+
+    try {
+        const submissions = await problemModel.getSubmissionsByCourse(courseId);
+        res.status(200).json(submissions);
+        return;
+    } catch (error) {
+        console.error('Error in getSubmissionsByCourse controller:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+        return;
     }
 };

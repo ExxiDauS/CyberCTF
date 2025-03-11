@@ -25,6 +25,7 @@ interface Submission {
     user_id: number;
     status: boolean;
     submission_date: string;
+    answer: string | null;
 }
 
 // Create a new problem
@@ -56,12 +57,12 @@ export const addProblemToCourse = async (pro_id: number, course_id: number, adde
 };
 
 // Create a submission
-export const createSubmission = async (pro_cour_id: number, user_id: number, status: boolean): Promise<number> => {
+export const createSubmission = async (pro_cour_id: number, user_id: number, status: boolean, answer: string): Promise<number> => {
     const connection = await pool.getConnection();
     try {
         const [result] = await connection.query<ResultSetHeader>(
-            'INSERT INTO Submissions (pro_cour_id, user_id, status) VALUES (?, ?, ?)',
-            [pro_cour_id, user_id, status]
+            'INSERT INTO Submissions (pro_cour_id, user_id, status, answer) VALUES (?, ?, ?, ?)',
+            [pro_cour_id, user_id, status, answer]
         );
         return result.insertId;
     } finally {
@@ -109,6 +110,25 @@ export const getSubmissionStatus = async (userId: number, pro_cour_id: number): 
             return rows[0] as Submission;
         }
         return null;
+    } finally {
+        connection.release();
+    }
+};
+
+//get all submissions by course ID
+export const getSubmissionsByCourse = async (courseId: number): Promise<Submission[]> => {
+    const connection = await pool.getConnection();
+    try {
+        const [rows] = await connection.query<RowDataPacket[]>(
+            `SELECT s.sub_id, s.pro_cour_id, s.user_id, s.status, s.submission_date, u.username
+             FROM Submissions s
+            JOIN CourseProblems cp ON s.pro_cour_id = cp.pro_cour_id
+            JOIN Users u ON s.user_id = u.user_id
+             WHERE cp.course_id = ?
+             ORDER BY s.submission_date DESC`,
+            [courseId]
+        );
+        return rows as Submission[];
     } finally {
         connection.release();
     }

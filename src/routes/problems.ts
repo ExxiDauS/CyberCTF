@@ -23,5 +23,8 @@ router.get('/course/:courseId', authenticate, problemController.getProblemsByCou
 // Get submission status
 router.get('/submissions/:pro_cour_id', authenticate, problemController.getSubmissionStatus); // No extra middleware needed.
 
+// Get submissions for a course (NEW ROUTE)
+router.get('/course/:courseId/submissions', authenticate, problemController.getSubmissionsByCourse);
+
 
 export default router;
