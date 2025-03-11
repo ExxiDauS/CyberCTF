@@ -6,7 +6,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc --build",
     "start": "node ./dist/index.js",
-    "dev": "nodemon ./src/index.ts"
+    "dev": "nodemon ./src/index.ts",
+    "copy-files": "copyfiles -u 1 src/**/*.{json,html,css,env,ejs,pug} dist/"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +28,7 @@
     "@types/ejs": "^3.1.5",
     "@types/express": "^5.0.0",
     "@types/multer": "^1.4.12",
+    "copyfiles": "^2.4.1",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
