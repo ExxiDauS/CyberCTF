@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Platform</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Study Platform</h1>
+
+    <div id="auth-section">
+        <div id="login-form">
+            <h2>Login</h2>
+            <input type="text" id="login-username" placeholder="Username">
+            <input type="password" id="login-password" placeholder="Password">
+            <button onclick="login()">Login</button>
+            <p id="login-message"></p>
+        </div>
+
+        <div id="register-form">
+            <h2>Register</h2>
+            <input type="text" id="register-username" placeholder="Username">
+            <input type="password" id="register-password" placeholder="Password">
+            <input type="text" id="register-email" placeholder="Email">
+            <input type="text" id="register-first-name" placeholder="First Name">
+            <input type="text" id="register-last-name" placeholder="Last Name">
+            <button onclick="register()">Register</button>
+            <p id="register-message"></p>
+        </div>
+    </div>
+
+    <div id="logged-in-section" style="display: none;">
+        <p>Logged in as: <span id="logged-in-user"></span></p>
+        <button onclick="goToProfile()">Go to Profile</button>
+        <button onclick="goToCourses()">Go to Courses</button>
+        <button onclick="goToAdminPage()" id="admin-button" style="display: none;">Admin Page</button>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Page</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Admin Page</h1>
+
+    <h2>Create Course</h2>
+    <input type="text" id="course-name" placeholder="Course Name">
+    <input type="text" id="course-description" placeholder="Course Description">
+    <button onclick="createCourse()">Create Course</button>
+    <p id="create-course-message"></p>
+
+    <h2>Create Problem</h2>  <!-- New Section -->
+    <input type="text" id="problem-name" placeholder="Problem Name">
+    <textarea id="problem-description" placeholder="Problem Description"></textarea>
+    <button onclick="createProblem()">Create Problem</button>
+    <p id="create-problem-message"></p>
+
+    <h2>List of Users</h2>
+        <ul id="user-list">
+        <!-- Usernames will be added here -->
+    </ul>
+
+    <button onclick="goToIndex()">Back to Home</button>
+
+    <script src="script.js"></script>
+</body>
+</html>
