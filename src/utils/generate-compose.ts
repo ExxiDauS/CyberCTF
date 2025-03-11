@@ -12,26 +12,30 @@ const docker = new Docker();
 export async function createContainer(data: TemplateData) {
   try {
     const imageName = `${data.courseName}-${data.problemID}:1.0.0`;
+    const image = await docker.getImage(imageName).inspect();
+    const imagePorts = Object.keys(image.Config.ExposedPorts);
+    const containerPort = imagePorts[0];
 
     console.log(`Attempting to use image: ${imageName}`);
     // Create container with options matching Docker Compose configuration
     const container = await docker.createContainer({
       Image: imageName,
-      Cmd: ["/usr/sbin/sshd", "-D"],
+      Cmd: image.Config.Cmd, // ! make this line dynamic for different commands and different images
       ExposedPorts: {
-        '22/tcp': {}              // Expose SSH port as defined in Dockerfile
+        [containerPort]: {}, // ! make this line dynamic for different ports
       },
       HostConfig: {
         PortBindings: {
-          '22/tcp': [
+          [containerPort]: [
+            // ! make this line dynamic for different ports
             {
-              HostPort: data.port    // Map container port 22 to host port 2222
-            }
-          ]
+              HostPort: data.port, // Map container port 22 to host port 2222
+            },
+          ],
         },
         RestartPolicy: {
-          Name: 'unless-stopped'  // Optional: restart policy
-        }
+          Name: "unless-stopped", // Optional: restart policy
+        },
       },
       // Container name (optional)
       name: `${data.courseName}-${data.problemID}-${data.username}`,
