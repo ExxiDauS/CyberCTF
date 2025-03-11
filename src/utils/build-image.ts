@@ -52,7 +52,7 @@ export async function buildImage(
     });
 
     // Build the Docker image
-    const imageTag = `${courseName}-${problemID}:1.0.0`;
+    const imageTag = `${courseName.toLowerCase()}-${problemID}:1.0.0`;
     console.log(`Building Docker image with tag: ${imageTag}`);
 
     const stream = await docker.buildImage(tarStream, {

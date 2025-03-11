@@ -17,20 +17,21 @@ export async function createContainer(data: TemplateData) {
     // Create container with options matching Docker Compose configuration
     const container = await docker.createContainer({
       Image: imageName,
-      Cmd: ["sh"],
-      AttachStdout: true,
+      Cmd: ["/usr/sbin/sshd", "-D"],
+      ExposedPorts: {
+        '22/tcp': {}              // Expose SSH port as defined in Dockerfile
+      },
       HostConfig: {
-        // Port binding (convert from Docker Compose format to Dockerode format)
         PortBindings: {
-          "22/tcp": [{ HostPort: "2222" }],
-          "80/tcp": [{ HostPort: data.port }],
+          '22/tcp': [
+            {
+              HostPort: '2222'    // Map container port 22 to host port 2222
+            }
+          ]
         },
-        // Volume mapping
-        Binds: ["./data:/app/data"],
-        // Restart policy
         RestartPolicy: {
-          Name: "always",
-        },
+          Name: 'unless-stopped'  // Optional: restart policy
+        }
       },
       // Container name (optional)
       name: `${data.courseName}-${data.problemID}-${data.username}`,
