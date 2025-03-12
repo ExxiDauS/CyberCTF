@@ -44,7 +44,7 @@ export const createProblem = async (pro_name: string, pro_description: string, u
 
 // Add a problem to a course (bridge table)
 export const addProblemToCourse = async (pro_id: number, course_id: number, added_by: number, expiration_date: string | null): Promise<number> => {
-     const connection = await pool.getConnection();
+    const connection = await pool.getConnection();
     try {
         const [result] = await connection.query<ResultSetHeader>(
             'INSERT INTO CourseProblems (pro_id, course_id, added_by, expiration_date) VALUES (?, ?, ?, ?)',
@@ -57,14 +57,97 @@ export const addProblemToCourse = async (pro_id: number, course_id: number, adde
 };
 
 // Create a submission
-export const createSubmission = async (pro_cour_id: number, user_id: number, status: boolean, answer: string): Promise<number> => {
+export const createOrUpdateSubmission = async (pro_cour_id: number, user_id: number, answer: string): Promise<Submission> => {
     const connection = await pool.getConnection();
     try {
-        const [result] = await connection.query<ResultSetHeader>(
-            'INSERT INTO Submissions (pro_cour_id, user_id, status, answer) VALUES (?, ?, ?, ?)',
-            [pro_cour_id, user_id, status, answer]
+        await connection.beginTransaction();
+
+        // Check if a submission already exists
+        const [existingSubmissions] = await connection.query<RowDataPacket[]>(
+            'SELECT sub_id, submission_date FROM Submissions WHERE pro_cour_id = ? AND user_id = ?',
+            [pro_cour_id, user_id]
         );
-        return result.insertId;
+
+        let sub_id: number;
+        let submission_date: string;
+
+        if (existingSubmissions.length > 0) {
+            // Submission exists, update the answer and set status to false
+            sub_id = existingSubmissions[0].id;
+            submission_date = existingSubmissions[0].submission_date; // Keep existing date
+            await connection.query(
+                'UPDATE Submissions SET answer = ?, status = false WHERE sub_id = ?',
+                [answer, sub_id]
+            );
+        } else {
+            // Submission doesn't exist, create a new one with status set to false
+            const [result] = await connection.query<ResultSetHeader>(
+                'INSERT INTO Submissions (pro_cour_id, user_id, status, answer) VALUES (?, ?, false, ?)',
+                [pro_cour_id, user_id, answer]
+            );
+            sub_id = result.insertId;
+
+            // Fetch the submission_date *after* the insert.
+            const [newSubmission] = await connection.query<RowDataPacket[]>(
+                'SELECT submission_date FROM Submissions WHERE sub_id = ?',
+                [sub_id]
+            );
+            submission_date = newSubmission[0].submission_date;
+
+
+        }
+
+        await connection.commit();
+
+        // Construct the Submission object
+        const submission: Submission = {
+            sub_id,
+            pro_cour_id,
+            user_id,
+            status: false,
+            submission_date,
+            answer,
+        };
+        return submission;
+
+    } catch (error) {
+        await connection.rollback();
+        throw error;
+    } finally {
+        connection.release();
+    }
+};
+
+// Submit submission
+export const submitSubmission = async (pro_cour_id: number, user_id: number, std_answer: string): Promise<Submission | null> => {
+    const connection = await pool.getConnection();
+    try {
+        // Find the submission
+        const [submissions] = await connection.query<RowDataPacket[]>(
+            'SELECT * FROM Submissions WHERE pro_cour_id = ? AND user_id = ?',
+            [pro_cour_id, user_id]
+        );
+
+        if (submissions.length === 0) {
+            return null; // Submission not found
+        }
+
+        const submission = submissions[0] as Submission;
+
+        // Compare answers and update status
+        if (submission.answer === std_answer) {
+            await connection.query(
+                'UPDATE Submissions SET status = true WHERE sub_id = ?',
+                [submission.sub_id]
+            );
+            submission.status = true; // Update the local copy
+        }
+        //else don't do anything.
+
+        return submission;
+
+    } catch (error) {
+        throw error; // Re-throw for controller to handle
     } finally {
         connection.release();
     }
@@ -85,16 +168,16 @@ export const getAllProblems = async (): Promise<Problem[]> => {
 export const getProblemsByCourseId = async (courseId: number): Promise<any[]> => { //any for join query
     const connection = await pool.getConnection();
     try {
-      const [rows] = await connection.query<RowDataPacket[]>(
-        `SELECT p.*, cp.pro_cour_id, cp.expiration_date
+        const [rows] = await connection.query<RowDataPacket[]>(
+            `SELECT p.*, cp.pro_cour_id, cp.expiration_date
          FROM Problems p
          JOIN CourseProblems cp ON p.pro_id = cp.pro_id
          WHERE cp.course_id = ?`,
-        [courseId]
-      );
-      return rows as any[];
+            [courseId]
+        );
+        return rows as any[];
     } finally {
-      connection.release();
+        connection.release();
     }
 };
 

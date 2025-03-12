@@ -14,6 +14,9 @@ router.post('/course/:courseId', authenticate, hasCoursePermission('courseId', '
 // Create a submission (Student enrolled in the course)
 router.post('/submissions', authenticate, problemController.createSubmission); // No extra middleware needed
 
+// Submit a submission (Student enrolled in the course)
+router.post('/submissions/submit', authenticate, problemController.submitSubmission);
+
 // Get all problems (Admin)
 router.get('/', authenticate, hasGlobalPermission('manage_users'), problemController.getAllProblems);
 
@@ -23,7 +26,7 @@ router.get('/course/:courseId', authenticate, problemController.getProblemsByCou
 // Get submission status
 router.get('/submissions/:pro_cour_id', authenticate, problemController.getSubmissionStatus); // No extra middleware needed.
 
-// Get submissions for a course (NEW ROUTE)
+// Get submissions for a course
 router.get('/course/:courseId/submissions', authenticate, problemController.getSubmissionsByCourse);
 
 
