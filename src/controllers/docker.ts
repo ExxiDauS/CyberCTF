@@ -8,8 +8,7 @@ import { composeDown } from "../utils/compose-down";
 
 interface TemplateData {
   username: string;
-  port: string;
-  courseName: string;
+  problemName: string;
   problemID: number;
 }
 
@@ -20,8 +19,7 @@ export async function postCreateContainer(
   try {
     const data: TemplateData = {
       username: req.query.username,
-      port: req.query.port,
-      courseName: req.query.courseName,
+      problemName: req.query.problemName,
       problemID: req.query.problemID,
     };
     const container = await createContainer(data);
@@ -37,8 +35,8 @@ export async function postBuildImage(
 ) {
   try {
     await buildImage(
-      `${req.query.courseName}-${req.query.problemID}.tar`,
-      req.query.courseName,
+      `${req.query.problemName}-${req.query.problemID}.tar`,
+      req.query.problemName,
       req.query.problemID
     );
     res.status(200).send("Image built successfully");
@@ -54,7 +52,7 @@ export async function postComposeUp(
   try {
     await composeUp(
       req.query.username,
-      req.query.courseName,
+      req.query.problemName,
       req.query.problemID
     );
     res.status(200).send("Compose up successfully");
@@ -70,7 +68,7 @@ export async function postComposeDown(
   try {
     await composeDown(
       req.query.username,
-      req.query.courseName,
+      req.query.problemName,
       req.query.problemID
     );
     res.status(200).send("Compose down successfully");
@@ -92,7 +90,7 @@ export const postUploadImage = async (
     const problemID = parseInt(req.body.problemID as string);
     const result = await uploadImage(
       req.file,
-      req.body.courseName as string,
+      req.body.problemName as string,
       problemID
     );
 

@@ -26,10 +26,10 @@ const s3Client = new S3Client({
 });
 const s3Bucket = process.env.S3_BUCKET || "mytsvcbucket";
 
-export async function uploadImage(file: FileData, courseName: string, problemID: number) {
+export async function uploadImage(file: FileData, problemName: string, problemID: number) {
     try {
         const extension = path.extname(file.originalname);
-        const key = `${courseName}-${problemID}${extension}`;
+        const key = `${problemName}-${problemID}${extension}`;
         const uploadParams = {
             Bucket: s3Bucket,
             Key: key,

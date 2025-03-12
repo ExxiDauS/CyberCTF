@@ -20,13 +20,13 @@ const s3Bucket = process.env.S3_BUCKET || "mytsvcbucket";
  * Builds a Docker image from a tar file stored in S3
  * @param s3Bucket The S3 bucket name
  * @param s3Key The S3 object key (path to the tar file)
- * @param courseName The course name for tagging the image
+ * @param problemName The course name for tagging the image
  * @param problemID The problem ID for tagging the image
  * @returns Promise resolving to the build result
  */
 export async function buildImage(
   s3Key: string,
-  courseName: string,
+  problemName: string,
   problemID: number
 ) {
   try {
@@ -52,7 +52,7 @@ export async function buildImage(
     });
 
     // Build the Docker image
-    const imageTag = `${courseName.toLowerCase()}-${problemID}:1.0.0`;
+    const imageTag = `${problemName.toLowerCase()}-${problemID}:1.0.0`;
     console.log(`Building Docker image with tag: ${imageTag}`);
 
     const stream = await docker.buildImage(tarStream, {
