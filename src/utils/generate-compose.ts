@@ -51,7 +51,7 @@ export async function createContainer(data: TemplateData) {
       // Container name (optional)
       name: `${data.courseName}-${data.problemID}-${data.username}`,
       // Environment variables
-      Env: [`SSH_USER=${data.username}`, `SSH_PASSWORD=${data.username}`, `FLAG=${randomCharacters}`] // ! make this line dynamic for different environment variables
+      Env: [`SSH_USER=user${data.username}`, `SSH_PASSWORD=pass${data.username}`, `FLAG=${randomCharacters}`] // ! make this line dynamic for different environment variables
     });
 
     return container;
