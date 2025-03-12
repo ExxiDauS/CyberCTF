@@ -29,15 +29,18 @@ chmod 440 /etc/sudoers.d/$SSH_USER \n\
 # Set bash as the default shell for the user\n\
 echo "exec bash" > /home/$SSH_USER/.profile \n\
 chown $SSH_USER:$SSH_USER /home/$SSH_USER/.profile \n\
+# Create the flag file in the user home directory\n\
+echo -n "SumetSan{" > /home/$SSH_USER/.flags \n\
+echo -n "$FLAG" | md5sum | cut -d " " -f1 | tr -d "\n" >> /home/$SSH_USER/.flags \n\
+echo "}" >> /home/$SSH_USER/.flags \n\
+chown $SSH_USER:$SSH_USER /home/$SSH_USER/.flags \n\
 /usr/sbin/sshd -D \
 ' > /start.sh
 
 RUN chmod +x /start.sh
 
-# Create the flag file correctly
-RUN echo -n "SumetSan{" > .flags && \
-    echo -n "$FLAG" | md5sum | cut -d ' ' -f1 >> .flags && \
-    echo -n "}" >> .flags
+# Remove any old flag files that might be in the wrong location
+RUN rm -f /.flags /root/.flags
 
 # Expose SSH port
 EXPOSE 22

@@ -4,6 +4,7 @@ import { buildImage } from "../utils/build-image";
 import { composeUp } from "../utils/compose-up";
 import { GenerateDockerComposeParams } from "../types/query-params";
 import { uploadImage } from "../utils/upload-image";
+import { composeDown } from "../utils/compose-down";
 
 interface TemplateData {
   username: string;
@@ -57,6 +58,22 @@ export async function postComposeUp(
       req.query.problemID
     );
     res.status(200).send("Compose up successfully");
+  } catch (error) {
+    res.status(500).send(error);
+  }
+}
+
+export async function postComposeDown(
+  req: Request<{}, {}, {}, GenerateDockerComposeParams>,
+  res: Response
+) {
+  try {
+    await composeDown(
+      req.query.username,
+      req.query.courseName,
+      req.query.problemID
+    );
+    res.status(200).send("Compose down successfully");
   } catch (error) {
     res.status(500).send(error);
   }

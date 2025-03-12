@@ -15,6 +15,17 @@ export async function createContainer(data: TemplateData) {
     const image = await docker.getImage(imageName).inspect();
     const imagePorts = Object.keys(image.Config.ExposedPorts);
     const containerPort = imagePorts[0];
+    const randomCharacters = (): string =>
+      Array(10 + Math.floor(Math.random() * 15))
+        .fill(0)
+        .map(
+          () =>
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[
+              Math.floor(Math.random() * 62)
+            ]
+        )
+        .join("");
+
 
     console.log(`Attempting to use image: ${imageName}`);
     // Create container with options matching Docker Compose configuration
@@ -40,7 +51,7 @@ export async function createContainer(data: TemplateData) {
       // Container name (optional)
       name: `${data.courseName}-${data.problemID}-${data.username}`,
       // Environment variables
-      Env: [`USERNAME=${data.username}`],
+      Env: [`SSH_USER=${data.username}`, `SSH_PASSWORD=${data.username}`, `FLAG=${randomCharacters}`] // ! make this line dynamic for different environment variables
     });
 
     return container;
