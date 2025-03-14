@@ -459,6 +459,42 @@ async function unenrollFromCourse(courseId) {
     }
 }
 
+async function loadSubmissions(courseId) {
+    try {
+        const response = await fetch(`http://localhost:3000/api/problems/course/${courseId}/submissions`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${getToken()}`,
+            },
+        });
+
+        if (response.ok) {
+            const submissions = await response.json();
+            displaySubmissions(submissions);
+        } else {
+            console.error('Failed to load submissions:', response.status);
+        }
+    } catch (error) {
+        console.error('Error loading submissions:', error);
+    }
+}
+
+function displaySubmissions(submissions) {
+    const submissionsList = document.getElementById('submissions-list');
+     if(!submissionsList){ //if element not exist
+        return;
+    }
+    submissionsList.innerHTML = ''; // Clear previous content
+
+
+    submissions.forEach(submission => {
+        const submissionItem = document.createElement('li');
+        // Assuming you have a 'username' property associated with the submission
+        submissionItem.textContent = `User: ${submission.username}, Submission Date: ${new Date(submission.submission_date).toLocaleString()}, Status: ${submission.status ? 'Good' : 'Bad'}`;
+        submissionsList.appendChild(submissionItem);
+    });
+}
+// Modify loadCourseDetail to call loadSubmissions
 async function loadCourseDetail() {
     const urlParams = new URLSearchParams(window.location.search);
     const courseId = urlParams.get('courseId');
@@ -530,6 +566,8 @@ async function loadCourseDetail() {
         displayProblems(problems);
 
         await populateProblemSelect();
+        // Load submissions
+        await loadSubmissions(courseId); // Add this line
 
     } catch (error) {
         console.error('Error loading course detail page:', error);
@@ -539,7 +577,7 @@ async function loadCourseDetail() {
 
 async function displayProblems(problems) {
     const problemList = document.getElementById('problem-list');
-    if(!problemList) { // defensive check
+    if (!problemList) {
         console.error("problem-list element not found");
         return;
     }
@@ -547,45 +585,69 @@ async function displayProblems(problems) {
 
     for (const problem of problems) {
         const listItem = document.createElement('li');
-        const expirationText = problem.expiration_date ? ` (Expires: ${new Date(problem.expiration_date).toLocaleString()})` : '';
+        const expirationText = problem.expiration_date
+            ? ` (Expires: ${new Date(problem.expiration_date).toLocaleString()})`
+            : '';
         listItem.textContent = `${problem.pro_name} ${expirationText}`;
 
 
         // Check submission status
-        const submissionStatusResponse = await fetch(`http://localhost:3000/api/problems/submissions/${problem.pro_cour_id}`, {
-             method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${getToken()}`,
-            },
-        });
+        const submissionStatusResponse = await fetch(
+            `http://localhost:3000/api/problems/submissions/${problem.pro_cour_id}`,
+            {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${getToken()}`,
+                },
+            }
+        );
 
         if (submissionStatusResponse.ok) {
-            const { submission } = await submissionStatusResponse.json(); // Get submission from response
+            const { submission } = await submissionStatusResponse.json();
             if (submission) {
-              // Change text color based on status
-              listItem.style.color = submission.status ? 'green' : 'red';
+                // Submission exists: change text color based on status
+                listItem.style.color = submission.status ? 'green' : 'red';
+                //and always show the input
+                 showSubmissionInput(listItem, problem);
             } else {
-                // Add submission buttons only if no submission exists
-                const goodSubmitButton = document.createElement('button');
-                goodSubmitButton.textContent = 'Good Submit';
-                goodSubmitButton.onclick = () => createSubmission(problem.pro_cour_id, true);
-
-                const badSubmitButton = document.createElement('button');
-                badSubmitButton.textContent = 'Bad Submit';
-                badSubmitButton.onclick = () => createSubmission(problem.pro_cour_id, false);
-
-                listItem.appendChild(goodSubmitButton);
-                listItem.appendChild(badSubmitButton);
+                // No submission: Add a "Create Submission" button
+                const createSubmissionButton = document.createElement('button');
+                createSubmissionButton.textContent = 'Create Submission';
+                createSubmissionButton.onclick = async () => {
+                    await createSubmission(problem.pro_cour_id, problem.pro_name);
+                    // After creating, show the input fields
+                     showSubmissionInput(listItem, problem);
+                     createSubmissionButton.remove(); // Remove the "Create Submission" button
+                     await loadCourseDetail(); //refresh
+                };
+                listItem.appendChild(createSubmissionButton);
             }
-        }
-        else{
-          console.log("Error on getting submission status")
+        } else {
+            console.error("Error on getting submission status");
         }
         problemList.appendChild(listItem);
     }
 }
 
-async function createSubmission(pro_cour_id, status) {
+function showSubmissionInput(listItem, problem) {
+    // Remove any existing input fields/buttons (cleanup)
+   const existingInput = listItem.querySelector('textarea');
+   const existingButton = listItem.querySelector('button');
+   if (existingInput) existingInput.remove();
+   if (existingButton) existingButton.remove();
+
+   const stdAnswerTextArea = document.createElement('textarea');
+   stdAnswerTextArea.id = `std-answer-${problem.pro_cour_id}`;
+   stdAnswerTextArea.placeholder = 'Enter the standard answer here...';
+   listItem.appendChild(stdAnswerTextArea);
+
+   const submitButton = document.createElement('button');
+   submitButton.textContent = 'Submit Answer';
+   submitButton.onclick = () => submitStdAnswer(problem.pro_cour_id, stdAnswerTextArea.value);
+   listItem.appendChild(submitButton);
+}
+
+async function createSubmission(pro_cour_id, answer) {
     try {
         const response = await fetch('http://localhost:3000/api/problems/submissions', {
             method: 'POST',
@@ -593,18 +655,46 @@ async function createSubmission(pro_cour_id, status) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${getToken()}`,
             },
-            body: JSON.stringify({ pro_cour_id, status }),
+            body: JSON.stringify({ pro_cour_id, answer }), // Send pro_name as initial answer
         });
 
         if (response.ok) {
-            alert(`Submission recorded successfully!`);
-            await loadCourseDetail(); // Refresh the problem list
+            // alert(`Initial submission created successfully!`); // Removed this alert
+            // Don't reload the whole detail page, just re-display problems
+             // await loadCourseDetail(); // NO.  This reloads *everything*.
         } else {
             const data = await response.json();
             alert(`Submission failed: ${data.message || 'Unknown error'}`);
         }
     } catch (error) {
         console.error('Error creating submission:', error);
+        alert('An error occurred during submission.');
+    }
+}
+
+async function submitStdAnswer(pro_cour_id, std_answer) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseId = urlParams.get('courseId');
+    try {
+        const response = await fetch('http://localhost:3000/api/problems/submissions/submit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`,
+            },
+            body: JSON.stringify({ pro_cour_id, std_answer }),
+        });
+
+        if (response.ok) {
+            const data = await response.json();  // Parse response to check status
+             alert(data.message); // Show server message
+             await loadCourseDetail(); // Reload detail
+        } else {
+            const data = await response.json();
+            alert(`Submission failed: ${data.message || 'Unknown error'}`);
+        }
+    } catch (error) {
+        console.error('Error submitting standard answer:', error);
         alert('An error occurred during submission.');
     }
 }
