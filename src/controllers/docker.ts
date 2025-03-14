@@ -4,24 +4,23 @@ import { buildImage } from "../utils/build-image";
 import { composeUp } from "../utils/compose-up";
 import { GenerateDockerComposeParams } from "../types/query-params";
 import { uploadImage } from "../utils/upload-image";
+import { composeDown } from "../utils/compose-down";
 
 interface TemplateData {
   username: string;
-  port: string;
-  courseName: string;
+  problemName: string;
   problemID: number;
 }
 
 export async function postCreateContainer(
-  req: Request<{}, {}, {}, GenerateDockerComposeParams>,
+  req: Request<{}, {}, GenerateDockerComposeParams>,
   res: Response
 ) {
   try {
     const data: TemplateData = {
-      username: req.query.username,
-      port: req.query.port,
-      courseName: req.query.courseName,
-      problemID: req.query.problemID,
+      username: req.body.username,
+      problemName: req.body.problemName,
+      problemID: req.body.problemID,
     };
     const container = await createContainer(data);
     res.status(200).send(container);
@@ -31,14 +30,14 @@ export async function postCreateContainer(
 }
 
 export async function postBuildImage(
-  req: Request<{}, {}, {}, GenerateDockerComposeParams>,
+  req: Request<{}, {}, GenerateDockerComposeParams>,
   res: Response
 ) {
   try {
     await buildImage(
-      `${req.query.courseName}-${req.query.problemID}.tar`,
-      req.query.courseName,
-      req.query.problemID
+      `${req.body.problemName}-${req.body.problemID}.tar`,
+      req.body.problemName,
+      req.body.problemID
     );
     res.status(200).send("Image built successfully");
   } catch (error) {
@@ -47,16 +46,32 @@ export async function postBuildImage(
 }
 
 export async function postComposeUp(
-  req: Request<{}, {}, {}, GenerateDockerComposeParams>,
+  req: Request<{}, {}, GenerateDockerComposeParams>,
   res: Response
 ) {
   try {
     await composeUp(
-      req.query.username,
-      req.query.courseName,
-      req.query.problemID
+      req.body.username,
+      req.body.problemName,
+      req.body.problemID
     );
     res.status(200).send("Compose up successfully");
+  } catch (error) {
+    res.status(500).send(error);
+  }
+}
+
+export async function postComposeDown(
+  req: Request<{}, {}, GenerateDockerComposeParams>,
+  res: Response
+) {
+  try {
+    await composeDown(
+      req.body.username,
+      req.body.problemName,
+      req.body.problemID
+    );
+    res.status(200).send("Compose down successfully");
   } catch (error) {
     res.status(500).send(error);
   }
@@ -75,7 +90,7 @@ export const postUploadImage = async (
     const problemID = parseInt(req.body.problemID as string);
     const result = await uploadImage(
       req.file,
-      req.body.courseName as string,
+      req.body.problemName as string,
       problemID
     );
 

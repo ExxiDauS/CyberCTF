@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { postComposeUp, postCreateContainer, postUploadImage } from "../controllers/docker";
+import { postComposeDown, postComposeUp, postCreateContainer, postUploadImage } from "../controllers/docker";
 import { postBuildImage } from "../controllers/docker";
 import multer from "multer";
 
@@ -16,6 +16,7 @@ const router = Router();
 router.post("/create-compose", postCreateContainer);
 router.post("/build-image", postBuildImage);
 router.post("/compose-up", postComposeUp);
+router.post("/compose-down", postComposeDown);
 router.post("/upload-image", upload.single("file"), postUploadImage);
 // router.get("/compose-up", getComposeUp);
 

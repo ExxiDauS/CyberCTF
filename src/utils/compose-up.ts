@@ -2,13 +2,14 @@ import Docker from 'dockerode';
 
 const docker = new Docker();
 
-export async function composeUp(userName: string, courseName: string, problemID: number) {
+export async function composeUp(userName: string, problemName: string, problemID: number) {
   try {
     const allContainer = await docker.listContainers({all: true})
     for (let i = 0; i < allContainer.length; i++) {
-      if (allContainer[i].Names[0].includes(`${courseName}-${problemID}-${userName}`)) {
+      if (allContainer[i].Names[0].includes(`${problemName}-${problemID}-${userName}`)) {
         const container = docker.getContainer(allContainer[i].Id);
-        container.start();
+        const res = await container.start();
+        return {mssage: "Container started successfully", res};
       }
     }
   } catch (error) {
