@@ -45,9 +45,9 @@ function getRandomInt(min: number, max: number): number {
 }
 
 async function findRandomAvailablePort(
-  minPort: number = 1,
+  minPort: number = 10000,
   maxPort: number = 65535,
-  maxAttempts: number = 60000
+  maxAttempts: number = 50000
 ): Promise<number | null> {
   const attemptedPorts = new Set<number>();
 

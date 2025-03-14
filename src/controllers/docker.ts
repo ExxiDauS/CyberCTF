@@ -13,14 +13,14 @@ interface TemplateData {
 }
 
 export async function postCreateContainer(
-  req: Request<{}, {}, {}, GenerateDockerComposeParams>,
+  req: Request<{}, {}, GenerateDockerComposeParams>,
   res: Response
 ) {
   try {
     const data: TemplateData = {
-      username: req.query.username,
-      problemName: req.query.problemName,
-      problemID: req.query.problemID,
+      username: req.body.username,
+      problemName: req.body.problemName,
+      problemID: req.body.problemID,
     };
     const container = await createContainer(data);
     res.status(200).send(container);
@@ -30,14 +30,14 @@ export async function postCreateContainer(
 }
 
 export async function postBuildImage(
-  req: Request<{}, {}, {}, GenerateDockerComposeParams>,
+  req: Request<{}, {}, GenerateDockerComposeParams>,
   res: Response
 ) {
   try {
     await buildImage(
-      `${req.query.problemName}-${req.query.problemID}.tar`,
-      req.query.problemName,
-      req.query.problemID
+      `${req.body.problemName}-${req.body.problemID}.tar`,
+      req.body.problemName,
+      req.body.problemID
     );
     res.status(200).send("Image built successfully");
   } catch (error) {
@@ -46,14 +46,14 @@ export async function postBuildImage(
 }
 
 export async function postComposeUp(
-  req: Request<{}, {}, {}, GenerateDockerComposeParams>,
+  req: Request<{}, {}, GenerateDockerComposeParams>,
   res: Response
 ) {
   try {
     await composeUp(
-      req.query.username,
-      req.query.problemName,
-      req.query.problemID
+      req.body.username,
+      req.body.problemName,
+      req.body.problemID
     );
     res.status(200).send("Compose up successfully");
   } catch (error) {
@@ -62,14 +62,14 @@ export async function postComposeUp(
 }
 
 export async function postComposeDown(
-  req: Request<{}, {}, {}, GenerateDockerComposeParams>,
+  req: Request<{}, {}, GenerateDockerComposeParams>,
   res: Response
 ) {
   try {
     await composeDown(
-      req.query.username,
-      req.query.problemName,
-      req.query.problemID
+      req.body.username,
+      req.body.problemName,
+      req.body.problemID
     );
     res.status(200).send("Compose down successfully");
   } catch (error) {
