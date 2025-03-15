@@ -7,12 +7,13 @@ import rolesRouter from "./routes/roles";
 import problemRouter from "./routes/problems";
 import cors from "cors";
 import dockerRouter from "./routes/docker";
+import cookieParser from "cookie-parser";
 
 // import { start } from './utils/generate-compose';
 
 const app = express();
 const PORT = 3000;
-
+app.use(cookieParser());
 app.use(express.json());
 app.use(
   cors({
