@@ -10,15 +10,33 @@ declare global {
   }
 }
 
-export const authenticate = (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.status(401).json({ message: 'Unauthorized: No token provided' });
-    return; //  Return to stop execution.  Do NOT call next()
+function parseCookies(cookieHeader: string | undefined | null): Record<string, string> {
+  const cookieObj: Record<string, string> = {};
+  if (!cookieHeader) {
+    return cookieObj;
   }
 
-  const token = authHeader.split(' ')[1];
+  cookieHeader.split(';').forEach(cookie => {
+    const parts = cookie.split('=');
+    const key = parts.shift()?.trim(); // Use optional chaining and trim
+    if (key) { // Make sure key exists
+      const value = parts.join('=').trim();  //Re-join in case value has '='
+      cookieObj[key] = value;
+    }
+  });
+
+  return cookieObj;
+}
+
+export const authenticate = (req: Request, res: Response, next: NextFunction) => {
+  const cookies = parseCookies(req.headers.cookie);
+  const token = cookies.token;
+
+  if (!token) {
+    res.status(401).json({ message: 'Unauthorized: No token provided' });
+    return; // Return to stop execution.  Do NOT call next()
+  }
+
   const decoded = verifyToken(token);
 
   if (!decoded) {
