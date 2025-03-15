@@ -76,9 +76,8 @@ export const login = async (req: Request, res: Response) => {
       path: '/',
       httpOnly: true,
       sameSite: 'none',
-      secure: false,
+      secure: true,
     });
-    console.log("Set-Cookie Header:", res.getHeaders()['set-cookie']);
     res.status(200).json({ message: 'Login successful', token });
     return;
 
