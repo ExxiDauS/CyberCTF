@@ -31,6 +31,7 @@ function parseCookies(cookieHeader: string | undefined | null): Record<string, s
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
   const cookies = parseCookies(req.headers.cookie);
   const token = cookies.token;
+  console.log(cookies);
 
   if (!token) {
     res.status(401).json({ message: 'Unauthorized: No token provided' });

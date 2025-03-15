@@ -71,7 +71,13 @@ export const login = async (req: Request, res: Response) => {
 
 
     const token = generateToken(user.user_id, globalPermissions, coursePermissions);
-
+    res.cookie('token', token, {
+      maxAge: 60 * 60 * 24 * 7 * 1000,
+      path: '/',
+      httpOnly: true,
+      sameSite: 'none',
+      secure: false,
+    });
     res.status(200).json({ message: 'Login successful', token });
     return;
 
